@@ -202,7 +202,6 @@
 				$container = $this->objectStore->Container($container_name);
 			}
 			catch (Exception $ex) {
-				var_dump($ex, $container_name);exit;
 				return false;
 			}
 

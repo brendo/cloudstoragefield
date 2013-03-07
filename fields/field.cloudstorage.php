@@ -382,7 +382,7 @@
 			if($this->get('required') != 'yes') $label->appendChild(new XMLElement('i', __('Optional')));
 
 			$span = new XMLElement('span', NULL, array('class' => 'frame'));
-			if ($data['file']) {
+			if (isset($data['file'])) {
 				$link = Widget::Anchor(preg_replace("![^a-z0-9]+!i", "$0&#8203;", $data['file']), $data['url']);
 				$link->setAttribute('target', '_blank');
 				$span->appendChild(new XMLElement('span', $link));
