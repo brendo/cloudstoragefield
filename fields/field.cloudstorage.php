@@ -403,11 +403,15 @@
 			if(!is_array($data) || !isset($data['file']) || is_null($data['file'])){
 				return;
 			}
+			
+			// Remove the file, and HTTP from the url to give the path.
+			$path = str_replace($data['file'], NULL, $data['url']);
+			$path = str_replace('http://', NULL, $path);
 
 			$item = new XMLElement($this->get('element_name'));
 			$item->setAttributeArray(array(
 				'size' =>	General::formatFilesize($data['size']),
-			 	'path' =>	str_replace($data['file'], NULL, $data['url']),
+			 	'path' =>	$path,
 				'type' =>	$data['mimetype']
 			));
 
