@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="cloudstoragefield" status="experimental" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>Cloud Storage Field</name>
+	<description>This field allows you to store your uploads on the cloud using Rackspace's Cloud Files product.</description>
+	<repo type="github">https://github.com/brendo/cloudstoragefield</repo>
+	<types>
+		<type>Field Types</type>
+	</types>
+	<authors>
+		<author>
+			<name github="brendo" symphony="brendo">Brendan Abbott</name>
+		</author>
+	</authors>
+	<releases>
+		<release version="0.1" date="2013-03-07" min="2.3">
+			- Initial release
+		</release>
+	</releases>
+</extension>
