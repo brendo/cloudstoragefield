@@ -12,6 +12,16 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="0.2" date="2013-03-18" min="2.3">
+			#### General changes
+			- Tracking latest [PHP-Opencloud](https://github.com/rackspace/php-opencloud) release
+			- Restore storing metadata about assets like the normal upload field
+
+			#### Rackspace Cloud Files
+			- Store SSL, Streaming and HTTP versions of assets
+			- Set the Rackspace timezone to mirror the Symphony timezone
+			- Allow you to choose containers from different regions instead of being locked to Dallas
+		</release>
 		<release version="0.1" date="2013-03-07" min="2.3">
 			- Initial release
 		</release>

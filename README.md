@@ -8,14 +8,13 @@ This extension allows you store your uploads in the "Cloud" using [Rackspace's C
 
 2. Enable it by selecting the "Field: Cloud Storage Field", choose Enable from the With Selected menu, then click Apply.
 
-3. Go to your Symphony preferences page to add your Rackspace credentials.
+3. Go to your Symphony preferences page to add your Rackspace credentials and select your default container region.
 
 3. You can now add the "Cloud Storage Field" field to your sections, choosing the container to upload the files into.
 
 ### TODO
 
 - Make faster!
-- Enable meta information for images again
 - Better exception handling with Rackspace and reporting this errors back to users
 - Allow you to define file TTL on the CDN
 - Better abstraction (all hardcoded to use `Providers_Rackspace` at the moment)
@@ -24,7 +23,7 @@ This extension allows you store your uploads in the "Cloud" using [Rackspace's C
 ### Limitations
 
 - You will probably always need to create your containers inside the Rackspace Control Panel. It's just easier :)
-- Changing a field's container will not copy existing entrie's data to the new container
+- Changing a field's container will not copy existing entries data to the new container
 
 ### Credits
 

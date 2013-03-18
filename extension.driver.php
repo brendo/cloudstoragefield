@@ -23,6 +23,26 @@
 			return Symphony::Database()->query("DROP TABLE IF EXISTS `tbl_fields_cloudstorage`");
 		}
 
+		public function update($previousVersion = false) {
+			// Update to 0.2
+			if(version_compare($previousVersion, '0.2', '<')) {
+				// Change meta column to be TEXT columns
+				$field_tables = Symphony::Database()->fetchCol("field_id", "SELECT `field_id` FROM `tbl_fields_cloudstorage`");
+
+				foreach($field_tables as $field) {
+					Symphony::Database()->query(sprintf(
+						"ALTER TABLE `tbl_entries_data_%d` CHANGE `meta` `meta` TEXT",
+						$field
+					));
+					Symphony::Database()->query(sprintf(
+						'OPTIMIZE TABLE `tbl_entries_data_%d`', $field
+					));
+				}
+			}
+
+			return true;
+		}
+
 	/*-------------------------------------------------------------------------
 		Delegates:
 	-------------------------------------------------------------------------*/
