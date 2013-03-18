@@ -28,6 +28,8 @@
 
 		protected $objectStore = array();
 
+		protected $file = null;
+
 	/*-------------------------------------------------------------------------
 		Symphony:
 	-------------------------------------------------------------------------*/
@@ -304,11 +306,11 @@
 
 			if(!$container) return false;
 
-			$file = $container->DataObject();
+			$this->file = $container->DataObject();
 
 			// TODO: Exception handling.
-			if($file->Create($file_details, $file_path)) {
-				return $file->PublicURL();
+			if($this->file->Create($file_details, $file_path)) {
+				return $this->file->PublicURL();
 			}
 		}
 
@@ -334,5 +336,15 @@
 			}
 
 			return $file;
+		}
+
+		public function File() {
+			if(!isset($this->file)) return array();
+
+			return array(
+				'ssl' => $this->file->PublicURL('SSL'),
+				'streaming' => $this->file->PublicURL('STREAMING'),
+				'http' => $this->file->PublicURL()
+			);
 		}
 	}

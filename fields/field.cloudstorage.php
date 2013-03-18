@@ -4,7 +4,7 @@
 
 	require_once(TOOLKIT . '/fields/field.upload.php');
 	require_once __DIR__ . '/../providers/rackspace/cloud.rackspace.php';
-	
+
 	class FieldCloudStorage extends FieldUpload {
 
 		protected $rackspace = null;
@@ -28,7 +28,7 @@
 				  `file` varchar(255) default NULL,
 				  `size` int(11) unsigned NULL,
 				  `mimetype` varchar(100) default NULL,
-				  `meta` varchar(255) default NULL,
+				  `meta` TEXT default NULL,
 				  `url` varchar(250) default NULL,
 				  PRIMARY KEY  (`id`),
 				  UNIQUE KEY `entry_id` (`entry_id`),
@@ -263,11 +263,7 @@
 			// Its not an array, so just retain the current data and return:
 			if (is_array($data) === false) {
 				$result = array(
-					'file' =>		$data,
-					'mimetype' =>	null,
-					'size' =>		null,
-					'meta' =>		null,
-					'url' =>		null
+					'file' =>		$data
 				);
 
 				// Grab the existing entry data to preserve the MIME type and size information
@@ -337,6 +333,12 @@
 					$data['tmp_name'],
 					$this->get('container')
 				);
+
+				// Get meta information about the file (image dimensions etc.)
+				$meta = self::getMetaInfo($data['tmp_name'], $data['type']);
+
+				// Get information about the file from the Cloud
+				$meta = array_merge($meta, $this->rackspace->File());
 			}
 			catch (Exception $ex) {
 				$message = __(
@@ -360,9 +362,6 @@
 				$this->rackspace->deleteFile($existing_file, $this->get('container'));
 			}
 
-			// Meta information
-			$meta = self::getMetaInfo($data['url'], $data['type']);
-
 			return array(
 				'file' =>		$data['name'],
 				'size' =>		$data['size'],
@@ -376,7 +375,7 @@
 		Output:
 	-------------------------------------------------------------------------*/
 
-		public function displayPublishPanel(XMLElement &$wrapper, $data = null, $flagWithError = null, $fieldnamePrefix = null, $fieldnamePostfix = null, $entry_id = null){
+		public function displayPublishPanel(XMLElement &$wrapper, $data = null, $flagWithError = null, $fieldnamePrefix = null, $fieldnamePostfix = null, $entry_id = null) {
 			$label = Widget::Label($this->get('label'));
 			$label->setAttribute('class', 'file');
 			if($this->get('required') != 'yes') $label->appendChild(new XMLElement('i', __('Optional')));
@@ -403,11 +402,19 @@
 			if(!is_array($data) || !isset($data['file']) || is_null($data['file'])){
 				return;
 			}
-			
-			// Remove the file, and HTTP from the url to give the path.
-			$path = str_replace($data['file'], NULL, $data['url']);
-			$path = str_replace('http://', NULL, $path);
 
+			// Get all the meta data about this file out
+			$meta = unserialize($data['meta']);
+
+			// If the site is running HTTPS, get a HTTPS image, other fallback to HTTP
+			$file_url = (__SECURE__ && isset($meta['ssl'])) ? $meta['ssl'] : $meta['http'];
+
+			// Remove the file, and HTTP from the url to give the path.
+			$path = str_replace($data['file'], NULL, $file_url);
+			$path = preg_replace('/^https?:\/\//i', NULL, $path);
+
+			// Prepare the XML, mimicking the default Upload field as much
+			// as possible for maximum XSLT efficency
 			$item = new XMLElement($this->get('element_name'));
 			$item->setAttributeArray(array(
 				'size' =>	General::formatFilesize($data['size']),
@@ -422,9 +429,37 @@
 				new XMLElement('clean-filename', General::sanitize(self::getCleanFilename(basename($data['file']))))
 			);
 
-			$m = unserialize($data['meta']);
-			if(is_array($m) && !empty($m)){
-				$item->appendChild(new XMLElement('meta', NULL, $m));
+			// Add the meta data to the XML
+			if(is_array($meta) && !empty($meta)) {
+				// Normal meta from Upload field
+				$standard_meta = array();
+
+				if(isset($meta['creation'])) {
+					$standard_meta['creation'] = $meta['creation'];
+					unset($meta['creation']);
+				}
+
+				if(isset($meta['width'])) {
+					$standard_meta['width'] = $meta['width'];
+					unset($meta['width']);
+				}
+
+				if(isset($meta['height'])) {
+					$standard_meta['height'] = $meta['height'];
+					unset($meta['height']);
+				}
+
+				$xMeta = new XMLElement('meta', NULL, $standard_meta);
+
+				// This will add any extra meta data to the <meta> element
+				// as child nodes
+				foreach($meta as $key => $value) {
+					$xMeta->appendChild(
+						new XMLElement($key, $value)
+					);
+				}
+
+				$item->appendChild($xMeta);
 			}
 
 			$wrapper->appendChild($item);
@@ -450,7 +485,7 @@
 				return $link->generate();
 			}
 		}
-	
+
 	/*-------------------------------------------------------------------------
 		Export:
 	-------------------------------------------------------------------------*/
