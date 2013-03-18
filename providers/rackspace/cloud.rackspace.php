@@ -45,10 +45,15 @@
 				// Get the available container regions
 				if(array_key_exists('rackspace-container-regions', $details)) {
 					$this->regions = explode(',', $details['rackspace-container-regions']);
-					$settings = array(
-						'container-regions' => $this->regions
-					);
 				}
+				// Default back to DFW (like the previous version)
+				else {
+					$this->regions = array('DFW');
+				}
+
+				$settings = array(
+					'container-regions' => $this->regions
+				);
 
 				// Get credentails
 				$credentials = $this->getCredentials();
