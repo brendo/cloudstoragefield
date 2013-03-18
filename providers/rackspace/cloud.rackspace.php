@@ -1,5 +1,7 @@
 <?php
 
+	if (!defined('__IN_SYMPHONY__')) die('<h2>Symphony Error</h2><p>You cannot directly access this file</p>');
+
 	/**
 	 * @package rackspace
 	 */
@@ -22,14 +24,46 @@
 
 		protected $apiKey = null;
 
-		protected $objectStore = null;
+		protected $regions = array();
+
+		protected $objectStore = array();
 
 	/*-------------------------------------------------------------------------
 		Symphony:
 	-------------------------------------------------------------------------*/
 
 		public function __construct() {
-			$this->getCredentials();
+			$this->getSettings();
+		}
+
+		public function getSettings() {
+			$details = Symphony::Configuration()->get('cloudstoragefield');
+
+			if(is_array($details)) {
+				// Get the available container regions
+				if(array_key_exists('rackspace-container-regions', $details)) {
+					$this->regions = explode(',', $details['rackspace-container-regions']);
+					$settings = array(
+						'container-regions' => $this->regions
+					);
+				}
+
+				// Get credentails
+				$credentials = $this->getCredentials();
+
+				// Merge the $settings and $credentials if they both exist
+				if(is_array($credentials)) {
+					return array_merge($settings, $credentials);
+				}
+				// Otherwise just return the $settings
+				else {
+					return $settings;
+				}
+			}
+			// No configuration, return `null`
+			else {
+				return null;
+			}
 		}
 
 		/**
@@ -68,9 +102,10 @@
 		 * @return XMLElement
 		 */
 		public function getPreferencesPanel() {
-			// Get any current credentials
+			// Get any current settings
 			$username = General::sanitize($this->username);
 			$api_key = General::sanitize($this->apiKey);
+			$regions = $this->regions;
 
 			// Build UI for adding them
 			$panel = new XMLElement('fieldset');
@@ -98,7 +133,29 @@
 
 			$panel->appendChild($div);
 
+			$div = new XMLElement('div', NULL, array('class' => 'columns two'));
+
+			$label = Widget::Label('Container Regions');
+			$label->setAttribute('class', 'column');
+
+			// Available Regions for Containers
+			$options = array(
+				array(null, false, null),
+				array('DFW', in_array('DFW', $regions), 'Dallas (DFW)'),
+				array('ORD', in_array('ORD', $regions), 'Chicago (ORD)')
+			);
+			$label->appendChild(
+				Widget::Select('settings[cloudstoragefield][rackspace-container-regions][]', $options,  array('multiple' => 'multiple'))
+			);
+			$div->appendChild($label);
+
+			$panel->appendChild($div);
+
 			return $panel;
+		}
+
+		public function savePreferences(array &$context) {
+			$context['settings']['cloudstoragefield']['rackspace-container-regions'] = implode(',', $context['settings']['cloudstoragefield']['rackspace-container-regions']);
 		}
 
 		/**
@@ -116,14 +173,26 @@
 				$containers = $this->getContainers();
 			}
 			catch (Exception $e) {
-				Administration::instance()->Page->pageAlert($e->getMessage());
+				Administration::instance()->Page->pageAlert(
+					__('Cloud Storage Field: %s', array($e->getMessage())), Alert::ERROR
+				);
+				return false;
 			}
 
 			// Display available containers
 			$options = array();
-			while($container = $containers->Next()) {
-				$name = $container->name;
-				$options[] = array($name, $settings['container'] === $name, $name);
+			foreach($containers as $region => $region_containers) {
+				$opts = array();
+
+				while($container = $region_containers->Next()) {
+					$name = $container->name;
+					$opts[] = array($name, $settings['container'] === $name, $name);
+				}
+
+				// If this region has containers, bring them in.
+				if(!empty($opts)) {
+					$options[] = array('label' => $region, 'options' => $opts);
+				}
 			}
 
 			$label = Widget::Label(__('Container'));
@@ -147,7 +216,7 @@
 	-------------------------------------------------------------------------*/
 
 		public function isConnected() {
-			return isset($this->objectStore);
+			return !empty($this->objectStore);
 		}
 
 		public function connect() {
@@ -162,10 +231,11 @@
 				'apiKey' => $this->apiKey
 			);
 			$conn = new OpenCloud\Rackspace($this->endpoint, $credentials);
-			$conn->SetDefaults('ObjectStore', 'cloudFiles', 'DFW', 'publicURL');
 
 			// Set the connection to be ObjectStore
-			$this->objectStore = $conn->ObjectStore();
+			foreach($this->regions as $region) {
+				$this->objectStore[$region] = $conn->ObjectStore('cloudFiles', $region, 'publicURL');
+			}
 
 			if(!$this->isConnected()) {
 				throw new Exception(__('Could not connect to Rackspace'));
@@ -175,6 +245,7 @@
 		}
 
 		public function getContainers() {
+			$containers = array();
 			$cache_id = md5($this->endpoint . $this->username . $this->apiKey);
 			$cache = new Cacheable(Symphony::Database());
 			$cachedData = $cache->check($cache_id);
@@ -186,7 +257,9 @@
 				|| (time() - $cachedData['creation']) > $validCache // The cache is old.
 			) {
 				$this->connect();
-				$containers = $this->objectStore->ContainerList();
+				foreach($this->objectStore as $region => $objectStore) {
+					$containers[$region] = $objectStore->ContainerList();
+				}
 				$cache->write($cache_id, serialize($containers), $validCache);
 			}
 			else {
@@ -200,7 +273,12 @@
 			$this->connect();
 
 			try {
-				$container = $this->objectStore->Container($container_name);
+				foreach($this->objectStore as $region => $objectStore) {
+					$container = $objectStore->Container($container_name);
+
+					// If we found the container, break
+					if($container !== false) break;
+				}
 			}
 			catch (Exception $ex) {
 				return false;

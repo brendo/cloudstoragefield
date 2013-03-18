@@ -6,7 +6,7 @@
 
 		public function install() {
 			return Symphony::Database()->query("
-				CREATE TABLE `tbl_fields_cloudstorage` (
+				CREATE TABLE IF NOT EXISTS `tbl_fields_cloudstorage` (
 					`id` int(11) unsigned NOT NULL auto_increment,
 					`field_id` int(11) unsigned NOT NULL,
 					`validator` varchar(150),
@@ -20,7 +20,7 @@
 		}
 
 		public function uninstall() {
-			return Symphony::Database()->query("DROP TABLE `tbl_fields_cloudstorage`");
+			return Symphony::Database()->query("DROP TABLE IF EXISTS `tbl_fields_cloudstorage`");
 		}
 
 	/*-------------------------------------------------------------------------
@@ -34,6 +34,11 @@
 					'delegate' => 'AddCustomPreferenceFieldsets',
 					'callback' => 'appendPreferences'
 				),
+				array(
+					'page'	=> '/system/preferences/',
+					'delegate'	=> 'Save',
+					'callback'	=> 'savePreferences'
+				),
 			);
 		}
 
@@ -43,5 +48,10 @@
 			$rackspace_settings = $rackspace->getPreferencesPanel();
 
 			$context['wrapper']->appendChild($rackspace_settings);
+		}
+
+		public function savePreferences(&$context) {
+			$rackspace = new Providers_Rackspace();
+			$rackspace->savePreferences($context);
 		}
 	}
