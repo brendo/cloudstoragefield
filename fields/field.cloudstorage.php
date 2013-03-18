@@ -406,8 +406,13 @@
 			// Get all the meta data about this file out
 			$meta = unserialize($data['meta']);
 
+			// Prefer meta to the url data
+			$file_url = isset($meta['http']) ? $meta['http'] : $data['url'];
+
 			// If the site is running HTTPS, get a HTTPS image, other fallback to HTTP
-			$file_url = (__SECURE__ && isset($meta['ssl'])) ? $meta['ssl'] : $meta['http'];
+			if(__SECURE__ && isset($meta['ssl'])) {
+				$file_url = $meta['ssl'];
+			}
 
 			// Remove the file, and HTTP from the url to give the path.
 			$path = str_replace($data['file'], NULL, $file_url);
