@@ -6,6 +6,7 @@
 
 	define('RAXSDK_CONNECTTIMEOUT', 10);
 	define('RAXSDK_TIMEOUT', 60);
+	define('RAXSDK_TIMEZONE', Symphony::Configuration()->get('timezone', 'region'));
 	require_once __DIR__ . '/../../libs/php-opencloud/lib/rackspace.php';
 	require_once __DIR__ . '/../interface.cloudprovider.php';
 
