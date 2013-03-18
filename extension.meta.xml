@@ -12,6 +12,13 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="0.2.1" date="2013-03-19" min="2.3">
+			#### General changes
+			- Handle when we have no meta data about an asset
+
+			#### Rackspace Cloud Files
+			- Set the default region to be DFW
+		</release>
 		<release version="0.2" date="2013-03-18" min="2.3">
 			#### General changes
 			- Tracking latest [PHP-Opencloud](https://github.com/rackspace/php-opencloud) release
