@@ -43,7 +43,14 @@
 	-------------------------------------------------------------------------*/
 
 		public function entryDataCleanup($entry_id, $data=NULL){
-			$this->rackspace->deleteFile($data['file'], $this->get('container'));
+			try {
+				if(isset($data['file']) && $data['file'] !== '') {
+					$this->rackspace->deleteFile($data['file'], $this->get('container'));
+				}
+			}
+			catch (Exception $ex) {
+				// File may not exist in the cloud anymore
+			}
 
 			return parent::entryDataCleanup($entry_id);
 		}
@@ -301,7 +308,12 @@
 					$data['error'] == UPLOAD_ERR_NO_FILE
 					&& !is_null($existing_file)
 				) {
-					$this->rackspace->deleteFile($existing_file, $this->get('container'));
+					try {
+						$this->rackspace->deleteFile($existing_file, $this->get('container'));
+					}
+					catch (Exception $ex) {
+						// File may not exist in the cloud anymore
+					}
 				}
 			}
 
@@ -359,7 +371,12 @@
 				isset($existing_file)
 				&& $existing_file !== $data['name']
 			) {
-				$this->rackspace->deleteFile($existing_file, $this->get('container'));
+				try {
+					$this->rackspace->deleteFile($existing_file, $this->get('container'));
+				}
+				catch (Exception $ex) {
+					// File may not exist in the cloud anymore
+				}
 			}
 
 			return array(
