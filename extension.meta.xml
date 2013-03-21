@@ -12,6 +12,14 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="0.2.2" date="2013-03-21" min="2.3">
+			#### General changes
+			- Improved README
+			- Better expection handling for missing files
+
+			#### Rackspace Cloud Files
+			- Add London region to available container locations
+		</release>
 		<release version="0.2.1" date="2013-03-19" min="2.3">
 			#### General changes
 			- Handle when we have no meta data about an asset
