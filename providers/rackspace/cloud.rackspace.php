@@ -149,7 +149,8 @@
 			$options = array(
 				array(null, false, null),
 				array('DFW', in_array('DFW', $regions), 'Dallas (DFW)'),
-				array('ORD', in_array('ORD', $regions), 'Chicago (ORD)')
+				array('ORD', in_array('ORD', $regions), 'Chicago (ORD)'),
+				array('LON', in_array('LON', $regions), 'London (LON)')
 			);
 			$label->appendChild(
 				Widget::Select('settings[cloudstoragefield][rackspace-container-regions][]', $options,  array('multiple' => 'multiple'))
