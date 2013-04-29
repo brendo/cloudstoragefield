@@ -144,6 +144,10 @@
 			$wrapper->appendChild($div);
 		}
 
+		public function checkFields(array &$errors, $checkForDuplicates = true){
+			return Field::checkFields($errors, $checkForDuplicates);
+		}
+
 		public function commit(){
 			if(!Field::commit()) return false;
 
